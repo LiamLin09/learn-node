@@ -15,9 +15,9 @@ const server = http.createServer((req, res) => {
         res.end('Welcome to home!');
     }
     else {
-        res.statusCode = 404;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end('Invalid request due to bad URL');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({hostname: hostname, port: port}));
     }
     
 })
