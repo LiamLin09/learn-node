@@ -1,2 +1,28 @@
 - Explain the order of execution in terms of the event loop for eventloop/immediate.js.
 - Will the order of execution change if timeout is changed to 0? Why or why not?
+
+we run the code first, it shows:
+<Buffer 54 68 65 20 70 6f 6c 6c 20 70 68 61 73 65 20 69 73 20 61 63 74 75 61 6c 6c 79 20 61 20 62 6c 6f 63 6b 69 6e 67 20 70 68 61 73 65 2e 20 49 66 20 74 68 ... 861 more bytes>
+I was scheduled to run immediately
+16ms have passed since I was scheduled
+
+Order of Execution:
+1. Starting Execution: 
+The script begins execution. The fs.readFile function is called to read a file asynchronously. This call is offloaded to the system kernel (if possible), and Node.js will continue executing the next lines of code without waiting for the file read operation to complete. The call to setImmediate is also registered.
+
+2. Event Loop Phases:
+Poll Phase: The event loop waits for an I/O event (e.g., file read completion). Once the fs.readFile operation completes, its callback is added to the poll queue. However, it won't be executed until the poll phase processes it.
+Check Phase: Executes setImmediate callbacks. The setImmediate callback is executed after the completion of the current poll phase. Therefore, "I was scheduled to run immediately" is logged.
+
+3. Executing fs.readFile Callback: After setImmediate has been executed, the event loop can run the callback from fs.readFile. Inside this callback:
+A 10ms synchronous block simulates work. This will block the event loop, preventing any other operations from occurring during this time.
+If there's no error, the file's content is logged. Otherwise, an error message is logged.
+A setTimeout is set with a delay of 5ms. However, due to the event loop's operation, this callback won't be executed exactly after 5ms. The actual execution time depends on the event loop's state and when it gets to the timer phase again.
+
+4. Executing setTimeout Callback: 
+After the minimum delay (5ms) has passed and the event loop reaches the timer phase again, the callback for setTimeout is executed, logging the delay since it was scheduled. This delay might be slightly more than 5ms due to the time spent executing previous callbacks and event loop phases.
+
+Timeout is changed to 0:
+- changing the setTimeout delay to 0 will not change the order of execution significantly. 
+- The setImmediate callback is still executed in the check phase, which comes after any I/O callbacks (like the fs.readFile callback) are processed. 
+- The main difference is how quickly the event loop might attempt to execute the setTimeout callback, but it will still need to wait for the next tick of the event loop at the very least. The critical point is that the order - setImmediate logging, followed by the fs.readFile callback, and then the setTimeout callback - remains the same.
