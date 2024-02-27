@@ -1,1 +1,17 @@
 - In eventloop/timer.js, what will be the order of execution? Briefly explain the order of execution w.r.t the event loop phases.
+we run the code first, it will show:
+foo
+baz
+foo
+baz
+2 : bar
+1 : bar
+
+the order of execution and the corresponding console output will be:
+
+"foo" (from foo(2))
+"baz" (from foo(2))
+"foo" (from foo(1))
+"baz" (from foo(1))
+"2 : bar" (from the delayed execution of bar(2))
+"1 : bar" (from the delayed execution of bar(1))
